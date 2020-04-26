@@ -7,4 +7,9 @@ provider "azurerm" {
 resource "azurerm_resource_group" "rg" {
   name     = "my-cloud-RG"
   location = "westus"
+
+  tags = {
+    Environment = "Terraform Getting Started"
+    Team        = "DevOops"
+  }
 }
