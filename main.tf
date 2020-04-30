@@ -1,6 +1,7 @@
 # Configure the Azure provider
 provider "azurerm" {
-  version = "~>1.32.0"
+  version = "=2.0.0"
+  features {}
 }
 
 # Create a new resource group
@@ -79,11 +80,10 @@ resource "azurerm_network_security_rule" "http_allow" {
 
 # Create network interface
 resource "azurerm_network_interface" "nic" {
-  name                      = "nic-myfirstnic"
-  location                  = azurerm_virtual_network.vnet.location
-  resource_group_name       = azurerm_resource_group.rg.name
-  network_security_group_id = azurerm_network_security_group.nsg.id
-  tags                      = azurerm_resource_group.rg.tags
+  name                = "nic-myfirstnic"
+  location            = azurerm_virtual_network.vnet.location
+  resource_group_name = azurerm_resource_group.rg.name
+  tags                = azurerm_resource_group.rg.tags
 
   ip_configuration {
     name                          = "nic-myfirstnic-config"
@@ -94,42 +94,39 @@ resource "azurerm_network_interface" "nic" {
 }
 
 # Create a linux vm (They call them VMs! Not ec2 instances or similar
-resource "azurerm_virtual_machine" "vm" {
-  name                  = "vm-myfirstvm"
-  location              = azurerm_virtual_network.vnet.location
-  resource_group_name   = azurerm_resource_group.rg.name
-  network_interface_ids = [azurerm_network_interface.nic.id]
-  vm_size               = "Standard_A1"
-  tags                  = azurerm_resource_group.rg.tags
+resource "azurerm_linux_virtual_machine" "vm" {
+  name                = "vm-myfirstvm"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_virtual_network.vnet.location
+  size                = "Standard_A1"
+  network_interface_ids = [
+    azurerm_network_interface.nic.id
+  ]
 
-  storage_os_disk {
-    name              = "myOsDisk"
-    create_option     = "FromImage"
-    caching           = "ReadWrite"
-    managed_disk_type = "Standard_LRS"
+  tags = azurerm_resource_group.rg.tags
+
+  computer_name = "skinnycat"
+
+  admin_username = "ajc"
+  admin_ssh_key {
+    username   = "ajc"
+    public_key = file("~/.ssh/id_rsa.pub")
+  }
+  disable_password_authentication = "true"
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
   }
 
   # AMI equivalent
-  storage_image_reference {
+  source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
     sku       = "18.04-LTS"
     version   = "latest"
   }
 
-  os_profile {
-    computer_name  = "fatcat"
-    admin_username = "ajc"
-  }
-
-
-  os_profile_linux_config {
-    disable_password_authentication = true
-    ssh_keys {
-      key_data = file("~/.ssh/id_rsa.pub")
-      path     = "/home/ajc/.ssh/authorized_keys"
-    }
-  }
 }
 
 output "ip" {
