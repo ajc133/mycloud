@@ -45,7 +45,7 @@ resource "azurerm_network_security_group" "nsg" {
   resource_group_name = azurerm_resource_group.rg.name
 }
 
-# Create Network Security Rule for "nsg-myfirstnsg"
+# Create ssh Network Security Rule for "nsg-myfirstnsg"
 resource "azurerm_network_security_rule" "ssh_allow" {
   name                        = "SSH"
   priority                    = 1001
@@ -54,7 +54,22 @@ resource "azurerm_network_security_rule" "ssh_allow" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "22"
-  source_address_prefix       = "73.0.0.0/8"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.rg.name
+  network_security_group_name = azurerm_network_security_group.nsg.name
+}
+
+# Create http Network Security Rule for "nsg-myfirstnsg"
+resource "azurerm_network_security_rule" "http_allow" {
+  name                        = "HTTP"
+  priority                    = 1002
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "80"
+  source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.rg.name
   network_security_group_name = azurerm_network_security_group.nsg.name
@@ -94,7 +109,7 @@ resource "azurerm_virtual_machine" "vm" {
   storage_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "16.04.0-LTS"
+    sku       = "18.04-LTS"
     version   = "latest"
   }
 
